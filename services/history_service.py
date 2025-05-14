@@ -7,15 +7,16 @@ from pathlib import Path
 from models.user_session import UserSession
 from models.suggestions import Suggestion, SuggestionSet
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]  # adjust depth if needed
+DATA_DIR = PROJECT_ROOT / "data"
 
 class HistoryService:
     
     def __init__(self, data_file: Optional[str] = None):
         # Default to data directory in the project root
         if data_file is None:
-            data_dir = Path(__file__).parent.parent.parent / "data"
-            data_dir.mkdir(exist_ok=True)
-            data_file = data_dir / "session_history.json"
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            data_file = DATA_DIR / "session_history.json"
             
         self.data_file = Path(data_file)
         
@@ -29,14 +30,14 @@ class HistoryService:
         # Create session entry
         session_entry = {
             "session": session.to_dict(),
-            "suggestions": suggestions.to_dict()
+            "suggestions": suggestions.to_dict().get("suggestions", [])
         }
         
         # Add to start of list (most recent first)
         data["sessions"].insert(0, session_entry)
         
-        # Keep only the most recent 10 sessions
-        data["sessions"] = data["sessions"][:10]
+        # recent 10 sessions
+        data["sessions"] = data["sessions"][:5]
         
         # Save updated data
         self._save_data(data)
